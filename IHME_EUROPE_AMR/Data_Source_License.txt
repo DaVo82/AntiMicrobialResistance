@@ -1,0 +1,1 @@
+Data can be downloaded from https://ghdx.healthdata.org/record/ihme-data/who-european-region-bacterial-antimicrobial-resistance-burden-estimates-2019 in accordance with the IHME FREE-OF-CHARGE NON-COMMERCIAL USER AGREEMENT.
