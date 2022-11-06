@@ -69,6 +69,13 @@ amr_data <- merge(dalys, deaths, all = TRUE) %>%
   merge(., ylls, all = TRUE)
 ```
 
+```{r reduce dataset}
+# filter on Germany only to reduce computation time
+# feel free to select other countries here
+amr_data <- amr_data %>% filter(location_name == "Germany") %>% 
+  select(-location_id, -location_name) # we don't need location columns if unique
+```
+
 ```{r functions}
 # function for tooltips
 with_tooltip <- function(value, tooltip) {
@@ -79,25 +86,26 @@ with_tooltip <- function(value, tooltip) {
 
 ```{r table}
 #| output: true
+#| column: screen
 amr_data %>%                                 
   # adjust columns for display
   mutate(
-    dalys_Number_UC = paste("(", as.character(round(dalys_lower_Number, digits = 3)), ", ",
-                            as.character(round(dalys_upper_Number, digits = 3)), ")", sep = ""),
-    dalys_Rate_UC = paste("(", as.character(round(dalys_lower_Rate, digits = 3)), ", ",
-                          as.character(round(dalys_upper_Rate, digits = 3)), ")", sep = ""),
-    deaths_Number_UC = paste("(", as.character(round(deaths_lower_Number, digits = 3)), ", ",
-                             as.character(round(deaths_upper_Number, digits = 3)), ")", sep = ""),
-    deaths_Rate_UC = paste("(", as.character(round(deaths_lower_Rate, digits = 3)), ", ",
-                           as.character(round(deaths_upper_Rate, digits = 3)), ")", sep = ""),
-    ylds_Number_UC = paste("(", as.character(round(ylds_lower_Number, digits = 3)), ", ",
-                           as.character(round(ylds_upper_Number, digits = 3)), ")", sep = ""),
-    ylds_Rate_UC = paste("(", as.character(round(ylds_lower_Rate, digits = 3)), ", ",
-                         as.character(round(ylds_upper_Rate, digits = 3)), ")", sep = ""),
-    ylls_Number_UC = paste("(", as.character(round(ylls_lower_Number, digits = 3)), ", ",
-                           as.character(round(ylls_upper_Number, digits = 3)), ")", sep = ""),
-    ylls_Rate_UC = paste("(", as.character(round(ylls_lower_Rate, digits = 3)), ", ",
-                         as.character(round(ylls_upper_Rate, digits = 3)), ")", sep = ""),
+    dalys_Number_UC = paste("(", as.character(round(dalys_lower_Number, digits = 4)), ", ",
+                            as.character(round(dalys_upper_Number, digits = 4)), ")", sep = ""),
+    dalys_Rate_UC = paste("(", as.character(round(dalys_lower_Rate, digits = 4)), ", ",
+                          as.character(round(dalys_upper_Rate, digits = 4)), ")", sep = ""),
+    deaths_Number_UC = paste("(", as.character(round(deaths_lower_Number, digits = 4)), ", ",
+                             as.character(round(deaths_upper_Number, digits = 4)), ")", sep = ""),
+    deaths_Rate_UC = paste("(", as.character(round(deaths_lower_Rate, digits = 4)), ", ",
+                           as.character(round(deaths_upper_Rate, digits = 4)), ")", sep = ""),
+    ylds_Number_UC = paste("(", as.character(round(ylds_lower_Number, digits = 4)), ", ",
+                           as.character(round(ylds_upper_Number, digits = 4)), ")", sep = ""),
+    ylds_Rate_UC = paste("(", as.character(round(ylds_lower_Rate, digits = 4)), ", ",
+                         as.character(round(ylds_upper_Rate, digits = 4)), ")", sep = ""),
+    ylls_Number_UC = paste("(", as.character(round(ylls_lower_Number, digits = 4)), ", ",
+                           as.character(round(ylls_upper_Number, digits = 4)), ")", sep = ""),
+    ylls_Rate_UC = paste("(", as.character(round(ylls_lower_Rate, digits = 4)), ", ",
+                         as.character(round(ylls_upper_Rate, digits = 4)), ")", sep = ""),
     age_group_name = case_when(age_group_name == "All Ages" ~ " All Ages",
                                age_group_name == "Neonatal" ~ " Neonatal",
                                age_group_name == "Post Neonatal" ~ " Post Neonatal",
@@ -108,17 +116,19 @@ amr_data %>%
                                  TRUE ~ antibiotic_class)
   ) %>% 
   # select necessary columns in right order
+  # add location_name here if filtering on more then one country
   select(infectious_syndrome, pathogen, antibiotic_class, counterfactual, 
-         location_name, age_group_name, contains("val_Number"), contains("Number_UC"),
+         age_group_name, contains("val_Number"), contains("Number_UC"),
          contains("val_Rate"), contains("Rate_UC"), -contains("_lower_"), 
          -contains("_upper_")) %>% 
   # create table
   reactable(.,
-            defaultColDef = colDef(minWidth = 135,
-                                   format = colFormat(digits = 3)),
+            defaultColDef = colDef(minWidth = 150,
+                                   format = colFormat(digits = 4,
+                                                      locales = "en-US")),
+            style = list(fontSize = "0.875rem"),
             columns = list(
-              location_name = colDef(name = "Location",
-                                     filterable = TRUE),
+              # add location_name here if filtering on more then one country
               age_group_name = colDef(name = "Age Group",
                                       filterable = TRUE),
               infectious_syndrome = colDef(name = "Infectious Syndrome",
@@ -133,29 +143,25 @@ amr_data %>%
 "drug-susceptible infection: measures attributable to AMR, i. e. an alternative scenario where infections with resistant pathogens are replaced with susceptible ones
 no infection: measures associated with AMR, i. e. an alternative scenario where drug-resistant infections would not occur
 at all")),
-            dalys_val_Number = colDef(name = "Number",  
-                                      style = color_scales(amr_data)),
+            dalys_val_Number = colDef(name = "Number"),
             dalys_Number_UC = colDef(name = "95% Uncertainty Interval"),
             dalys_val_Rate = colDef(name = "Rate",  
                                     style = color_scales(amr_data),
                                     header = with_tooltip("Rate", "rate per 100000 population")),
             dalys_Rate_UC = colDef(name = "95% Uncertainty Interval"),
-            deaths_val_Number = colDef(name = "Number",  
-                                       style = color_scales(amr_data)),
+            deaths_val_Number = colDef(name = "Number"),
             deaths_Number_UC = colDef(name = "95% Uncertainty Interval"),
             deaths_val_Rate = colDef(name = "Rate",  
                                      style = color_scales(amr_data),
                                      header = with_tooltip("Rate", "rate per 100000 population")),
             deaths_Rate_UC = colDef(name = "95% Uncertainty Interval"),
-            ylds_val_Number = colDef(name = "Number",  
-                                     style = color_scales(amr_data)),
+            ylds_val_Number = colDef(name = "Number"),
             ylds_Number_UC = colDef(name = "95% Uncertainty Interval"),
             ylds_val_Rate = colDef(name = "Rate",  
                                    style = color_scales(amr_data),
                                    header = with_tooltip("Rate", "rate per 100000 population")),
             ylds_Rate_UC = colDef(name = "95% Uncertainty Interval"),
-            ylls_val_Number = colDef(name = "Number",  
-                                     style = color_scales(amr_data)),
+            ylls_val_Number = colDef(name = "Number"),
             ylls_Number_UC = colDef(name = "95% Uncertainty Interval"),
             ylls_val_Rate = colDef(name = "Rate",  
                                    style = color_scales(amr_data),
@@ -177,12 +183,13 @@ at all")),
                        header = with_tooltip("YLLs", "Years of Life Lost"))
             ),
             defaultSorted = c("infectious_syndrome", "pathogen","antibiotic_class",
-                              "location_name", "counterfactual", "age_group_name"),
+                              "counterfactual", "age_group_name"),
+                     # add location_name here if filtering on more then one country
             filterable = FALSE,
             searchable = TRUE,
             showPageSizeOptions = TRUE,
-            pageSizeOptions = c(5, 10, 50),
-            defaultPageSize = 10,
+            pageSizeOptions = c(5, 8, 50),
+            defaultPageSize = 8,
             groupBy = c("infectious_syndrome", "pathogen", "antibiotic_class"),
             paginateSubRows = TRUE,
             bordered = TRUE,
@@ -190,10 +197,10 @@ at all")),
             highlight = TRUE,
             defaultExpanded = TRUE) %>% 
   # add title, subtitle and source
-  add_title("The burden of bacterial antimicrobial resistance in the WHO European region") %>% 
-  add_subtitle("Country-level estimates for 2019") %>% 
+  add_title("The burden of bacterial antimicrobial resistance in Germany in 2019") %>% 
+  add_subtitle("An extract of the country-level estimates for the WHO European region") %>% 
   add_source("Source: Institute for Health Metrics and Evaluation (IHME), University of Oxford. WHO European Region Bacterial Antimicrobial Resistance Burden Estimates 2019. Seattle, United States of America: Institute for Health Metrics and Evaluation (IHME), 2022
-             https://ghdx.healthdata.org/record/ihme-data/who-european-region-bacterial-antimicrobial-resistance-burden-estimates-2019")
+https://ghdx.healthdata.org/record/ihme-data/who-european-region-bacterial-antimicrobial-resistance-burden-estimates-2019")
 ```
 
 <font size="4"> This is a RStudio Table Contest 2022 contribution by Daniela Vogler (\@DanielaV).
