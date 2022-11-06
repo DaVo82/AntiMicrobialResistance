@@ -1,6 +1,8 @@
 ---
 title: ""
-format: html
+format: 
+  html:
+    embed-resources: true
 execute:
   cache: true
   echo: false
