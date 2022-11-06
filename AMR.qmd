@@ -1,12 +1,12 @@
 ---
 title: ""
 format: 
-  html:
-    embed-resources: true
+ html:
+  embed-resources: true
 execute:
-  cache: true
-  echo: false
-  output: false
+ cache: true
+ echo: false
+ output: false
 ---
 
 ```{r requirements}
